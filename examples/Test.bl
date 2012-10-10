@@ -1,0 +1,3 @@
+module Test (main) where
+
+main = putStrLn (if True then (if True then "True True" else "True False") else "False")
