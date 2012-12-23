@@ -1,9 +1,11 @@
-module Blimp.Main (main) where
+module Main (main) where
 
 import Control.Monad.Exception
 import Control.Monad.Exception.Base
 import qualified Data.ByteString.Lazy.Char8 as B
 import Data.Word (Word16)
+import System.Environment (getArgs)
+import System.FilePath.Posix (takeBaseName)
 
 import Language.Haskell.Exts
 
@@ -30,7 +32,7 @@ compileCon (UnQual (Ident "False")) = iconst_0
 compileCon (UnQual (Ident "True")) = iconst_1
 
 calculateOffset :: [Emitter] -> Word16
-calculateOffset = foldl (+) 0 . map (fromIntegral . generateCodeLength)
+calculateOffset = sum . map (fromIntegral . generateCodeLength)
 
 i0offset :: (Word16 -> Instruction) -> [Emitter] -> Emitter
 i0offset f es = i0 . f . calculateOffset $ (i0 . f $ 0) : es
@@ -44,8 +46,7 @@ compileExp (If b t f) = do
   let trueBlock = do
         compileExp t
         i0offset GOTO [compileExp f]
-      falseBlock = do
-        compileExp f
+      falseBlock = compileExp f
   compileExp b
   i0offset (IF C_EQ) [trueBlock]
   trueBlock
@@ -61,7 +62,7 @@ compileDecl (PatBind _ (PVar (Ident name)) sig rhs binds) = do
   return ()
 
 compileModule :: Module -> Emitter
-compileModule (Module _ (ModuleName name) _ Nothing exports imports decls) = do
+compileModule (Module _ (ModuleName name) _ Nothing exports imports decls) =
   mapM_ compileDecl decls
 
 compile :: ParseResult Module -> Emitter
@@ -70,6 +71,9 @@ compile (ParseFailed srcloc msg) = error msg
 
 main :: IO ()
 main = do
-  result <- parseFile "examples/Test.bl"
-  testClass <- return $ generate [] (B.pack "Test") (compile result)
-  B.writeFile "Test.class" (encodeClass testClass)
+  args <- getArgs
+  let filename = head args
+  result <- parseFile filename
+  let className = takeBaseName filename
+      testClass = generate [] (B.pack className) $ compile result
+  B.writeFile (className ++ ".class") $ encodeClass testClass

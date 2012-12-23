@@ -1,0 +1,22 @@
+name:                blimp
+version:             0.1.0.0
+synopsis:            Small Haskell to JVM compiler
+homepage:            https://github.com/pufuwozu/blimp
+license:             MIT
+license-file:        LICENSE.txt
+author:              Brian McKenna
+maintainer:          brian@brianmckenna.org
+category:            Language
+build-type:          Simple
+cabal-version:       >=1.8
+
+executable blimp
+  main-is:             Blimp/Main.hs
+  build-depends:         base                    ==4.5.*
+                       , mtl                     ==2.1.*
+                       , bytestring              ==0.9.*
+                       , containers              ==0.4.*
+                       , control-monad-exception ==0.10.*
+                       , haskell-src-exts        ==1.11.*
+                       , hs-java                 ==0.3.*
+                       , filepath                ==1.3.*
